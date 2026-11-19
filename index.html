@@ -53,12 +53,12 @@
   header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
     background:linear-gradient(180deg,rgba(6,10,20,.85),rgba(6,10,20,.45));
     border-bottom:1px solid var(--line);}
-  .nav{max-width:var(--max);margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:18px}
+  .nav{max-width:var(--max);margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.04em;color:var(--ink);text-decoration:none}
   .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 16px var(--cyan);animation:pulse 2.6s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}
-  .nav .links{margin-left:auto;display:flex;gap:6px}
-  .nav a.item{color:var(--muted);text-decoration:none;font-size:.94rem;padding:8px 13px;border-radius:999px;transition:.25s}
+  .nav .links{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .nav a.item{color:var(--muted);text-decoration:none;font-size:.94rem;padding:8px 13px;border-radius:999px;transition:.25s;white-space:nowrap}
   .nav a.item:hover{color:var(--ink);background:rgba(77,163,255,.13)}
 
   /* ---------- 通用 ---------- */
@@ -93,17 +93,22 @@
     animation:spin 16s linear infinite}
   .vinyl::before{content:"";position:absolute;inset:0;border-radius:50%;
     background:conic-gradient(from 0deg,rgba(110,231,255,.16),transparent 22%,transparent 55%,rgba(232,192,125,.14),transparent 82%);}
-  .label{position:absolute;inset:34%;border-radius:50%;display:grid;place-items:center;text-align:center;
+  .label{position:absolute;inset:31%;border-radius:50%;display:grid;place-items:center;text-align:center;
     background:radial-gradient(circle at 35% 30%,#1d4a80,#0d2544 62%,#071624);
     border:1px solid rgba(110,231,255,.22);box-shadow:inset 0 0 24px rgba(0,0,0,.55)}
-  .label b{font-size:.86rem;letter-spacing:.16em;color:var(--cyan)}
-  .label small{display:block;font-size:.6rem;letter-spacing:.3em;color:var(--muted);margin-top:4px}
-  .hole{position:absolute;width:7px;height:7px;border-radius:50%;background:#05080f;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
-  .tonearm{position:absolute;right:2%;top:6%;width:38%;height:3px;border-radius:3px;
-    background:linear-gradient(90deg,rgba(200,220,255,.55),rgba(200,220,255,.08));
-    transform-origin:100% 50%;transform:rotate(28deg);filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
-  .tonearm::after{content:"";position:absolute;left:-7px;top:-6px;width:14px;height:14px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,#dfe9ff,#5d7aa8)}
+  .label b{display:block;font-size:.8rem;letter-spacing:.1em;color:var(--cyan);white-space:nowrap}
+  .label small{display:block;font-size:.54rem;letter-spacing:.16em;color:var(--muted);margin-top:4px;white-space:nowrap}
+  .hole{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;
+    background:#05080f;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
+  .tonearm{position:absolute;right:1%;top:2%;width:52%;height:4px;border-radius:4px;
+    background:linear-gradient(270deg,rgba(228,239,255,.8),rgba(170,200,245,.15));
+    transform-origin:100% 50%;transform:rotate(-28deg);
+    box-shadow:0 6px 16px rgba(0,0,0,.45);}
+  .tonearm::before{content:"";position:absolute;right:-9px;top:-6px;width:16px;height:16px;border-radius:50%;
+    background:radial-gradient(circle at 34% 30%,#eef4ff,#6b83a8 68%,#39485f);
+    box-shadow:0 0 18px rgba(170,205,255,.3),inset 0 0 6px rgba(0,0,0,.45)}
+  .tonearm::after{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:13px;border-radius:3px 3px 5px 5px;
+    background:linear-gradient(180deg,#dbe7ff,#8ea4c4);box-shadow:0 2px 6px rgba(0,0,0,.5)}
   @keyframes spin{to{transform:rotate(360deg)}}
 
   /* 均衡器 */
@@ -172,10 +177,16 @@
     .about{grid-template-columns:1fr}
     .nav .links a.item{padding:8px 9px;font-size:.86rem}
     .contact{padding:24px}
+    section{padding:60px 0 6px}
+  }
+  @media (max-width:640px){
+    .nav .links .hide-sm{display:none}
+    .nav .links{gap:2px}
   }
   @media (max-width:480px){
     .stats{grid-template-columns:1fr}
-    .nav .links .hide-sm{display:none}
+    main{padding:0 18px 70px}
+    .contact{padding:22px 18px}
   }
   @media (prefers-reduced-motion:reduce){
     *{animation:none!important;transition:none!important;scroll-behavior:auto}
