@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#060a14">
+<meta name="description" content="落假情的个人网站 —— 一个蓝调氛围的个人主页，写着代码、音乐和折腾过的东西。">
+<meta property="og:title" content="落假情 · 蓝调氛围个人主页">
+<meta property="og:description" content="写点代码，听点蓝调，做点有趣的事。">
+<meta property="og:type" content="website">
+<title>落假情 · 蓝调氛围个人主页</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎷</text></svg>">
+<style>
+  :root{
+    --bg:#060a14;
+    --bg-soft:#0b1220;
+    --ink:#e9eefc;
+    --muted:#9baccc;
+    --blue:#4da3ff;
+    --cyan:#6ee7ff;
+    --gold:#e8c07d;
+    --line:rgba(140,175,230,.16);
+    --card:rgba(18,30,52,.55);
+    --radius:18px;
+    --max:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* ---------- 背景：蓝调舞台灯 ---------- */
+  .stage{position:fixed;inset:0;z-index:-2;overflow:hidden;background:
+    radial-gradient(1100px 620px at 78% -12%,rgba(77,163,255,.20),transparent 62%),
+    radial-gradient(900px 560px at 8% 8%,rgba(110,231,255,.10),transparent 60%),
+    radial-gradient(760px 520px at 50% 112%,rgba(232,192,125,.10),transparent 62%),
+    linear-gradient(180deg,#060a14 0%,#050911 55%,#04070d 100%);}
+  .stage::after{content:"";position:absolute;inset:0;opacity:.35;
+    background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px);
+    background-size:44px 44px;mask-image:radial-gradient(70% 60% at 50% 30%,#000 20%,transparent 78%);}
+  .glow{position:fixed;z-index:-1;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none}
+  .glow.a{width:420px;height:420px;left:-120px;top:16%;background:rgba(77,163,255,.28);animation:drift 19s ease-in-out infinite}
+  .glow.b{width:380px;height:380px;right:-100px;top:52%;background:rgba(110,231,255,.18);animation:drift 23s ease-in-out infinite reverse}
+  @keyframes drift{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(26px,-34px,0)}}
+
+  /* ---------- 导航 ---------- */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(6,10,20,.85),rgba(6,10,20,.45));
+    border-bottom:1px solid var(--line);}
+  .nav{max-width:var(--max);margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:18px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.04em;color:var(--ink);text-decoration:none}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 16px var(--cyan);animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}
+  .nav .links{margin-left:auto;display:flex;gap:6px}
+  .nav a.item{color:var(--muted);text-decoration:none;font-size:.94rem;padding:8px 13px;border-radius:999px;transition:.25s}
+  .nav a.item:hover{color:var(--ink);background:rgba(77,163,255,.13)}
+
+  /* ---------- 通用 ---------- */
+  main{max-width:var(--max);margin:0 auto;padding:0 22px 90px}
+  section{padding:74px 0 10px;scroll-margin-top:78px}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:.78rem;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--gold);margin:0 0 14px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  h2{font-size:clamp(1.45rem,3vw,2rem);margin:0 0 12px;letter-spacing:.01em}
+  .lead{color:var(--muted);max-width:60ch;margin:0 0 34px}
+
+  /* ---------- Hero ---------- */
+  .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:46px;align-items:center;padding:78px 0 24px}
+  .hero h1{font-size:clamp(2.35rem,6vw,3.9rem);line-height:1.12;margin:0 0 16px;letter-spacing:.01em}
+  .hero h1 .accent{background:linear-gradient(120deg,var(--cyan),var(--blue) 55%,var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.tag{color:var(--muted);font-size:clamp(1rem,1.5vw,1.12rem);margin:0 0 28px;max-width:46ch}
+  .cta{display:flex;flex-wrap:wrap;gap:12px}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:12px 22px;border-radius:999px;
+    text-decoration:none;font-size:.95rem;font-weight:600;border:1px solid transparent;transition:.25s}
+  .btn.primary{background:linear-gradient(120deg,var(--blue),var(--cyan));color:#04101f;
+    box-shadow:0 12px 34px rgba(77,163,255,.32)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(77,163,255,.42)}
+  .btn.ghost{border-color:var(--line);color:var(--ink);background:rgba(255,255,255,.03)}
+  .btn.ghost:hover{border-color:rgba(110,231,255,.5);color:var(--cyan)}
+
+  /* 黑胶唱片 */
+  .vinyl-wrap{position:relative;display:grid;place-items:center;aspect-ratio:1;max-width:420px;margin-left:auto;width:100%}
+  .vinyl{position:relative;width:86%;aspect-ratio:1;border-radius:50%;
+    background:repeating-radial-gradient(circle at 50% 50%,#12161f 0 2px,#0a0d14 2px 5px);
+    box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.06);
+    animation:spin 16s linear infinite}
+  .vinyl::before{content:"";position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 0deg,rgba(110,231,255,.16),transparent 22%,transparent 55%,rgba(232,192,125,.14),transparent 82%);}
+  .label{position:absolute;inset:34%;border-radius:50%;display:grid;place-items:center;text-align:center;
+    background:radial-gradient(circle at 35% 30%,#1d4a80,#0d2544 62%,#071624);
+    border:1px solid rgba(110,231,255,.22);box-shadow:inset 0 0 24px rgba(0,0,0,.55)}
+  .label b{font-size:.86rem;letter-spacing:.16em;color:var(--cyan)}
+  .label small{display:block;font-size:.6rem;letter-spacing:.3em;color:var(--muted);margin-top:4px}
+  .hole{position:absolute;width:7px;height:7px;border-radius:50%;background:#05080f;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+  .tonearm{position:absolute;right:2%;top:6%;width:38%;height:3px;border-radius:3px;
+    background:linear-gradient(90deg,rgba(200,220,255,.55),rgba(200,220,255,.08));
+    transform-origin:100% 50%;transform:rotate(28deg);filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+  .tonearm::after{content:"";position:absolute;left:-7px;top:-6px;width:14px;height:14px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#dfe9ff,#5d7aa8)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* 均衡器 */
+  .eq{display:flex;align-items:flex-end;gap:4px;height:26px;margin-top:26px}
+  .eq i{width:4px;border-radius:2px;background:linear-gradient(180deg,var(--cyan),rgba(77,163,255,.25));
+    animation:bounce 1.15s ease-in-out infinite}
+  @keyframes bounce{0%,100%{height:22%}50%{height:100%}}
+  .hero-note{color:#64748b;font-size:.8rem;letter-spacing:.14em;margin-top:10px}
+
+  /* ---------- 关于 ---------- */
+  .about{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 26px 24px;
+    backdrop-filter:blur(8px);position:relative;overflow:hidden}
+  .panel::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(110,231,255,.5),transparent)}
+  .panel p{margin:0;color:#c6d3ea}
+  .panel p + p{margin-top:12px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+  .stat{border:1px solid var(--line);border-radius:14px;padding:16px 14px;background:rgba(255,255,255,.02)}
+  .stat b{display:block;font-size:1.22rem;color:var(--cyan);letter-spacing:.02em}
+  .stat span{font-size:.8rem;color:var(--muted)}
+  .quote{display:flex;flex-direction:column;justify-content:center;gap:12px}
+  .quote blockquote{margin:0;font-size:1.18rem;line-height:1.7;color:#dbe6fb}
+  .quote blockquote::before{content:"“";color:var(--gold);font-size:2rem;line-height:0;vertical-align:-.35em;margin-right:4px}
+  .quote cite{font-style:normal;color:var(--muted);font-size:.85rem}
+
+  /* ---------- 作品 ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:20px}
+  .card{display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;
+    transition:transform .28s,border-color .28s,box-shadow .28s;position:relative;overflow:hidden}
+  .card::after{content:"";position:absolute;inset:auto -30% -60% auto;width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(77,163,255,.22),transparent 70%);opacity:0;transition:.35s}
+  .card:hover{transform:translateY(-4px);border-color:rgba(110,231,255,.45);box-shadow:0 22px 50px rgba(4,12,26,.6)}
+  .card:hover::after{opacity:1}
+  .card .tag{font-size:.72rem;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+  .card h3{margin:0;font-size:1.1rem}
+  .card p{margin:0;color:var(--muted);font-size:.92rem}
+  .card .more{margin-top:auto;color:var(--cyan);font-size:.86rem;display:inline-flex;gap:6px;align-items:center}
+  .card .more span{transition:transform .25s}
+  .card:hover .more span{transform:translateX(4px)}
+
+  /* ---------- 联系 ---------- */
+  .contact{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+    background:linear-gradient(120deg,rgba(23,40,70,.72),rgba(10,18,34,.72));
+    border:1px solid var(--line);border-radius:22px;padding:32px}
+  .contact h2{margin:0 0 6px}
+  .contact p{margin:0;color:var(--muted)}
+  .links{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;
+    border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:.9rem;transition:.25s;background:rgba(255,255,255,.03)}
+  .chip:hover{border-color:rgba(110,231,255,.5);color:var(--cyan);transform:translateY(-2px)}
+  .chip svg{width:16px;height:16px;fill:currentColor}
+
+  footer{max-width:var(--max);margin:0 auto;padding:34px 22px 46px;border-top:1px solid var(--line);
+    color:#64748b;font-size:.82rem;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+
+  /* ---------- 入场动画 ---------- */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.22,.61,.36,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width:860px){
+    .hero{grid-template-columns:1fr;padding-top:52px;gap:30px}
+    .vinyl-wrap{margin:0 auto;max-width:320px}
+    .about{grid-template-columns:1fr}
+    .nav .links a.item{padding:8px 9px;font-size:.86rem}
+    .contact{padding:24px}
+  }
+  @media (max-width:480px){
+    .stats{grid-template-columns:1fr}
+    .nav .links .hide-sm{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+<div class="glow a"></div>
+<div class="glow b"></div>
+
+<header>
+  <nav class="nav">
+    <a class="brand" href="#top"><span class="dot"></span>落假情</a>
+    <div class="links">
+      <a class="item" href="#about">关于</a>
+      <a class="item" href="#works">作品</a>
+      <a class="item" href="#contact">联系</a>
+      <a class="item hide-sm" href="https://github.com/luojiaqing" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <!-- Hero -->
+  <section class="hero" style="padding-bottom:10px">
+    <div>
+      <div class="eq" aria-hidden="true">
+        <i style="animation-delay:0s"></i><i style="animation-delay:.12s"></i>
+        <i style="animation-delay:.28s"></i><i style="animation-delay:.06s"></i>
+        <i style="animation-delay:.36s"></i><i style="animation-delay:.2s"></i>
+        <i style="animation-delay:.44s"></i><i style="animation-delay:.1s"></i>
+      </div>
+      <div class="hero-note">NOW PLAYING · BLUES IN CODE</div>
+      <h1>你好，<br>我是<span class="accent">落假情</span></h1>
+      <p class="tag">写点代码，听点蓝调，把折腾过的东西留在这里。<br>夜里适合两件事：调 Bug，和一曲慢拍。</p>
+      <div class="cta">
+        <a class="btn primary" href="#works">看看作品 →</a>
+        <a class="btn ghost" href="https://github.com/luojiaqing" target="_blank" rel="noopener">GitHub 主页</a>
+      </div>
+    </div>
+    <div class="vinyl-wrap" aria-hidden="true">
+      <div class="vinyl">
+        <div class="label"><div><b>落假情</b><small>BLUES · 03:41</small></div></div>
+        <div class="hole"></div>
+      </div>
+      <div class="tonearm"></div>
+    </div>
+  </section>
+
+  <!-- 关于 -->
+  <section id="about">
+    <p class="eyebrow reveal">About</p>
+    <h2 class="reveal">关于我</h2>
+    <p class="lead reveal">一个喜欢在深夜折腾代码的人。写网页、玩 AI Agent、偶尔做点小工具，也爱听蓝调——那种慢半拍、留一点空隙的节奏。</p>
+    <div class="about">
+      <div class="panel reveal">
+        <p>白天写业务，晚上写兴趣。喜欢把想法尽快变成一个能点开、能跑起来的东西，先把粗糙的版本放到线上，再慢慢打磨。</p>
+        <p>这个主页就是其中之一：一个安静的角落，记录我在写什么、在学什么。</p>
+        <div class="stats">
+          <div class="stat"><b>5</b><span>公开仓库</span></div>
+          <div class="stat"><b>∞</b><span>待折腾的想法</span></div>
+          <div class="stat"><b>1</b><span>杯咖啡/夜</span></div>
+        </div>
+      </div>
+      <div class="panel quote reveal">
+        <blockquote>慢一点没关系，<br>只要还在往前走。</blockquote>
+        <cite>—— 写在每个没睡着的夜里</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- 作品 -->
+  <section id="works">
+    <p class="eyebrow reveal">Selected Works</p>
+    <h2 class="reveal">在做什么</h2>
+    <p class="lead reveal">几个真实的仓库，代码公开，欢迎围观、提 Issue。</p>
+    <div class="cards">
+      <a class="card reveal" href="https://github.com/luojiaqing/agent-" target="_blank" rel="noopener">
+        <span class="tag">Docs · AI</span>
+        <h3>AI Agent 使用教程</h3>
+        <p>把 AI Agent 的用法、踩过的坑整理成一份能直接照着做的笔记，已用 GitHub Pages 发布。</p>
+        <span class="more">在线教程 <span>→</span></span>
+      </a>
+      <a class="card reveal" href="https://github.com/luojiaqing/ai-agent" target="_blank" rel="noopener">
+        <span class="tag">Experiment</span>
+        <h3>AI Agent 实验场</h3>
+        <p>关于智能体的小实验：提示词、工具调用、自动化流程，边试边记。</p>
+        <span class="more">查看仓库 <span>→</span></span>
+      </a>
+      <a class="card reveal" href="https://github.com/luojiaqing/luojiaqing-personal-site" target="_blank" rel="noopener">
+        <span class="tag">Web · This site</span>
+        <h3>蓝调氛围个人主页</h3>
+        <p>你正在看的这个页面。纯 HTML/CSS/JS，没有框架，也没有构建步骤，改完即上线。</p>
+        <span class="more">查看源码 <span>→</span></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- 联系 -->
+  <section id="contact">
+    <div class="contact reveal">
+      <div>
+        <h2>聊两句？</h2>
+        <p>有新想法、想一起做点东西，或者只是路过打个招呼，都可以。</p>
+      </div>
+      <div class="links">
+        <a class="chip" href="https://github.com/luojiaqing" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          GitHub · @luojiaqing
+        </a>
+        <a class="chip" href="https://luojiaqing.github.io/agent-/" target="_blank" rel="noopener">AI Agent 教程 ↗</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>© <span id="year">2026</span> 落假情 · 保留所有糟糕的玩笑</span>
+  <span>Built with plain HTML · Hosted on GitHub Pages</span>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const items = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' });
+    items.forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + 'ms'; io.observe(el); });
+  } else {
+    items.forEach((el) => el.classList.add('in'));
+  }
+</script>
+</body>
+</html>
