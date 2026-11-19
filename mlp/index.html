@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="用一次真实的 2-8-8-1 训练，讲清 MLP 的学习参数、反向传播与可视化。含可交互的决策边界、参数热力图和学习率实验。">
+  <meta name="theme-color" content="#0b1220">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MLP / 105 · 学习参数实验室">
+  <meta property="og:description" content="用一次真实的 2-8-8-1 训练，把 MLP 的学习参数拆成看得见、拖得动的四步。">
+  <meta property="og:image" content="assets/site-hero.png">
+  <title>MLP / 105 · 学习参数实验室</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="read-progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="回到顶部">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 36 36"><circle cx="8" cy="10" r="3"/><circle cx="8" cy="26" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="28" cy="18" r="3"/><path d="M10.5 11.5 15.5 16M10.5 24.5 15.5 20M21 18h4"/></svg>
+        </span>
+        <span class="brand-text">MLP <i>/</i> 105</span>
+      </a>
+      <nav class="site-nav" id="siteNav" aria-label="主要导航">
+        <a href="#overview">概览</a>
+        <a href="#parameters">参数</a>
+        <a href="#training">训练</a>
+        <a href="#experiment">实验</a>
+        <a href="#heatmap">热力图</a>
+        <a href="#learning-rate">学习率</a>
+        <a href="#cheatsheet">速查</a>
+        <div class="nav-footer">
+          <span class="nav-footer-label">REAL TRAINING · 105 PARAMS</span>
+          <p>所有曲线、边界和热力图都来自同一次真实训练。</p>
+          <a class="btn btn-primary" href="downloads/mlp-guide.pdf" download>下载 6 页 PDF ↓</a>
+        </div>
+      </nav>
+      <div class="header-actions">
+        <a class="header-link" href="downloads/mlp-guide.pdf" download>PDF</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="打开导航" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="hero-bg" aria-hidden="true">
+        <span class="glow glow-a"></span>
+        <span class="glow glow-b"></span>
+        <span class="hero-grid"></span>
+      </div>
+      <div class="shell hero-inner">
+        <div class="hero-copy">
+          <div class="eyebrow light"><span class="eyebrow-line"></span>MLP · 学习参数 · 可视化实验室</div>
+          <h1>105 个数字，<br><em>如何学会</em><br>分开两条月牙？</h1>
+          <p class="hero-lead">权重 W 和偏置 b，是 MLP 在训练中唯一会改变的东西。一次真实的 2-8-8-1 训练，把“学习”拆成看得见的前向、损失、反向和更新。</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#experiment">看真实训练 <span>↗</span></a>
+            <a class="btn btn-ghost" href="#parameters">从参数开始</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><strong>105</strong><span>可学习参数</span></div>
+            <div class="hero-stat"><strong>2-8-8-1</strong><span>网络结构</span></div>
+            <div class="hero-stat"><strong>97.9%</strong><span>测试准确率</span></div>
+            <div class="hero-stat"><strong>1,200</strong><span>次参数更新</span></div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-card">
+            <div class="hero-card-head">
+              <span class="live-label"><i></i> TRAINED NETWORK</span>
+              <span class="mono">2-8-8-1 / tanh / sigmoid</span>
+            </div>
+            <svg id="heroNetwork" viewBox="0 0 640 520" role="img" aria-label="由真实权重绘制的 2-8-8-1 神经网络"></svg>
+            <span class="float-chip chip-a">W1 <b>8×2</b></span>
+            <span class="float-chip chip-b">W2 <b>8×8</b></span>
+            <span class="float-chip chip-c">b1…b3 <b>17</b></span>
+            <div class="hero-card-foot">
+              <span><i class="dot teal"></i>正权重</span>
+              <span><i class="dot coral"></i>负权重</span>
+              <span>粗细 = |w|</span>
+            </div>
+          </div>
+          <div class="hero-caption">图 1 · 连线颜色和粗细来自训练后的真实权重</div>
+        </div>
+      </div>
+      <a class="scroll-cue" href="#overview"><span>向下滚动</span><i></i></a>
+    </section>
+
+    <!-- OVERVIEW -->
+    <section class="section section-cream" id="overview">
+      <div class="shell">
+        <div class="section-head split reveal">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>00 / 先看结论</div>
+            <h2>MLP 的学习，<br>不是写规则，<br>是调数字。</h2>
+          </div>
+          <p class="section-lead">参数、超参数、激活函数，先把三个最容易混淆的东西分开。再把“学习”拆成四步，每一步都能在代码里找到对应的一行。</p>
+        </div>
+
+        <div class="concept-grid">
+          <article class="concept-card reveal">
+            <div class="concept-top"><span class="concept-num">01</span><span class="concept-tag">PARAMETERS</span></div>
+            <h3>参数 <span>W / b</span></h3>
+            <p>每一层一张权重矩阵 W 和一个偏置向量 b。它们会在训练中被梯度更新，是模型真正“学到”的数字。</p>
+            <div class="concept-foot"><span>本例</span><strong>105 个</strong></div>
+          </article>
+          <article class="concept-card reveal" style="--delay:.08s">
+            <div class="concept-top"><span class="concept-num">02</span><span class="concept-tag">LEARNING</span></div>
+            <h3>学习 <span>四步循环</span></h3>
+            <p>前向算预测，损失量误差，反向分责任，更新走一步。学习率 η 控制步长，是超参数，不是学出来的。</p>
+            <div class="concept-foot"><span>重复</span><strong>1,200 次</strong></div>
+          </article>
+          <article class="concept-card reveal" style="--delay:.16s">
+            <div class="concept-top"><span class="concept-num">03</span><span class="concept-tag">VISUALIZATION</span></div>
+            <h3>可视化 <span>三种视角</span></h3>
+            <p>损失曲线看趋势，决策边界看形状，权重热图看模式。三张图一起读，才不会把“颜色深”误当成“更重要”。</p>
+            <div class="concept-foot"><span>本页</span><strong>5 张图 + 4 个交互</strong></div>
+          </article>
+        </div>
+
+        <div class="loop-strip reveal">
+          <span class="loop-label">THE LOOP</span>
+          <div class="loop-flow">
+            <span>前向 <b>Forward</b></span><i>→</i>
+            <span>损失 <b>Loss</b></span><i>→</i>
+            <span>反向 <b>Backward</b></span><i>→</i>
+            <span>更新 <b>Update</b></span><i>↺</i>
+          </div>
+          <span class="loop-note">一直重复，直到损失稳定</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARAMETERS -->
+    <section class="section section-paper" id="parameters">
+      <div class="shell">
+        <div class="section-head split reveal">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>01 / 参数解剖</div>
+            <h2>105 个参数，<br>到底住在哪里？</h2>
+          </div>
+          <p class="section-lead">一个神经元只做两件事：把输入按权重加起来，再过一次激活函数。拖动下面的滑块，看权重和偏置如何改变它的输出。</p>
+        </div>
+
+        <div class="lab-grid">
+          <article class="panel neuron-panel reveal">
+            <div class="panel-head">
+              <div><span class="tag">INTERACTIVE</span><h3>单神经元实验</h3></div>
+              <span class="panel-hint">拖动滑块 <i></i></span>
+            </div>
+
+            <svg id="neuronSvg" viewBox="0 0 640 270" role="img" aria-label="一个神经元的加权求和和 tanh 激活示意图">
+              <defs>
+                <marker id="nArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#14213d"/></marker>
+                <filter id="neuronGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              <text x="44" y="34" class="svg-kicker">INPUT</text>
+              <text x="276" y="34" class="svg-kicker">SUM + BIAS</text>
+              <text x="455" y="34" class="svg-kicker">ACTIVATION</text>
+              <circle cx="78" cy="92" r="31" class="n-input"/><text x="78" y="100" class="n-label" text-anchor="middle">x1</text>
+              <text x="78" y="138" class="n-sub" text-anchor="middle">1.0</text>
+              <circle cx="78" cy="204" r="31" class="n-input"/><text x="78" y="212" class="n-label" text-anchor="middle">x2</text>
+              <text x="78" y="250" class="n-sub" text-anchor="middle">0.5</text>
+              <line id="nLine1" x1="110" y1="100" x2="269" y2="145" stroke="#0f766e" stroke-width="4" marker-end="url(#nArrow)"/>
+              <line id="nLine2" x1="110" y1="196" x2="269" y2="162" stroke="#c2410c" stroke-width="2.4" marker-end="url(#nArrow)"/>
+              <rect id="nWeight1" x="158" y="94" width="82" height="25" rx="8" class="n-tag"/>
+              <text id="nW1Label" x="199" y="111" class="n-tag-text" text-anchor="middle">w1 = 0.80</text>
+              <rect id="nWeight2" x="156" y="180" width="86" height="25" rx="8" class="n-tag"/>
+              <text id="nW2Label" x="199" y="197" class="n-tag-text" text-anchor="middle">w2 = −0.50</text>
+              <circle cx="312" cy="154" r="44" class="n-sum"/><text x="312" y="168" class="n-sumtext" text-anchor="middle">Σ</text>
+              <text id="nBLabel" x="312" y="224" class="n-sub" text-anchor="middle">b = +0.20</text>
+              <line x1="357" y1="154" x2="424" y2="154" stroke="#14213d" stroke-width="2.2" marker-end="url(#nArrow)"/>
+              <rect x="430" y="111" width="118" height="86" rx="18" class="n-act"/>
+              <text x="489" y="150" class="n-acttext" text-anchor="middle">tanh</text>
+              <text x="489" y="174" class="n-sub" text-anchor="middle">把直线掰弯</text>
+              <line x1="551" y1="154" x2="603" y2="154" stroke="#14213d" stroke-width="2.2" marker-end="url(#nArrow)"/>
+              <circle cx="612" cy="154" r="24" class="n-output"/><text id="nALabel" x="612" y="161" class="n-outtext" text-anchor="middle">0.64</text>
+            </svg>
+
+            <div class="sliders">
+              <label class="slider-row"><span>w1</span><input id="w1Range" type="range" min="-2" max="2" step="0.05" value="0.8"><output id="w1Out">0.80</output></label>
+              <label class="slider-row"><span>w2</span><input id="w2Range" type="range" min="-2" max="2" step="0.05" value="-0.5"><output id="w2Out">−0.50</output></label>
+              <label class="slider-row"><span>b</span><input id="bRange" type="range" min="-2" max="2" step="0.05" value="0.2"><output id="bOut">+0.20</output></label>
+            </div>
+
+            <div class="neuron-readout">
+              <div><span class="readout-label">加权和</span><strong id="zValue">z = 0.75</strong></div>
+              <div><span class="readout-label">激活输出</span><strong id="aValue">a = 0.635</strong></div>
+              <div class="gauge"><span id="aGauge"></span><i></i></div>
+              <p>w 改变输入的方向和强度，b 改变门槛。tanh 把结果压到 −1 到 1 之间。</p>
+            </div>
+          </article>
+
+          <aside class="panel ledger-panel dark-panel reveal" style="--delay:.08s">
+            <div class="panel-head">
+              <div><span class="tag on-dark">PARAMETER LEDGER</span><h3>105 个参数清单</h3></div>
+              <span class="panel-hint on-dark">trainable</span>
+            </div>
+            <table class="param-table">
+              <thead><tr><th>层</th><th>权重 W</th><th>偏置 b</th><th class="right">小计</th></tr></thead>
+              <tbody>
+                <tr><td><b>01</b> 输入 → 隐层 1</td><td>8 × 2 = 16</td><td>8</td><td class="right">24</td></tr>
+                <tr><td><b>02</b> 隐层 1 → 隐层 2</td><td>8 × 8 = 64</td><td>8</td><td class="right">72</td></tr>
+                <tr><td><b>03</b> 隐层 2 → 输出</td><td>1 × 8 = 8</td><td>1</td><td class="right">9</td></tr>
+              </tbody>
+            </table>
+            <div class="ledger-total"><span>合计</span><strong>105</strong><span class="ledger-formula">24 + 72 + 9</span></div>
+            <div class="ledger-note">
+              <span class="mini-label">SHAPE RULE</span>
+              <p>每层参数量 = <b>(输入数 + 1) × 输出数</b>。加 1，是因为每个输出神经元都有一个偏置。</p>
+            </div>
+            <div class="ledger-warning">
+              <span>!</span>
+              <p>初始化别全填 0：同一层神经元起点一样，梯度也会一样，最后学成同一个模样。</p>
+            </div>
+            <div class="ledger-footnote">按 float32 算，105 个参数约 <b>420 bytes</b>。模型很小，难的是找到这 105 个数。</div>
+          </aside>
+        </div>
+
+        <div class="param-notes reveal">
+          <div><span class="note-index">A</span><p><b>W 是矩阵。</b>行是输出神经元，列是它接收的输入；颜色深浅只是数值大小。</p></div>
+          <div><span class="note-index">B</span><p><b>b 是向量。</b>每个输出神经元一个，把激活门槛往左或往右推。</p></div>
+          <div><span class="note-index">C</span><p><b>激活函数不是参数。</b>没有它，多层网络叠起来仍然是一条直线。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRAINING -->
+    <section class="section section-dark training" id="training">
+      <div class="shell">
+        <div class="section-head split reveal">
+          <div>
+            <div class="eyebrow light"><span class="eyebrow-line"></span>02 / 怎么学</div>
+            <h2>一次学习，<br>只要四步。</h2>
+          </div>
+          <p class="section-lead">点开每一步，看它在代码里长什么样。前向得到预测，损失量出差距，反向把责任分回每一层，更新沿着梯度反方向走一小步。</p>
+        </div>
+
+        <div class="train-steps reveal" role="tablist" aria-label="训练四步">
+          <button class="train-step is-active" data-train="forward" role="tab" aria-selected="true">
+            <span class="num">01</span><span class="step-title">前向</span><span class="step-en">FORWARD</span><span class="step-note">把输入变成预测</span>
+          </button>
+          <button class="train-step" data-train="loss" role="tab" aria-selected="false">
+            <span class="num">02</span><span class="step-title">损失</span><span class="step-en">LOSS</span><span class="step-note">量出离答案多远</span>
+          </button>
+          <button class="train-step" data-train="backward" role="tab" aria-selected="false">
+            <span class="num">03</span><span class="step-title">反向</span><span class="step-en">BACKWARD</span><span class="step-note">把责任分回每层</span>
+          </button>
+          <button class="train-step" data-train="update" role="tab" aria-selected="false">
+            <span class="num">04</span><span class="step-title">更新</span><span class="step-en">UPDATE</span><span class="step-note">沿反方向走一步</span>
+          </button>
+        </div>
+
+        <div class="train-detail">
+          <div class="code-card reveal">
+            <div class="code-head"><span class="window-dots"><i></i><i></i><i></i></span><span id="codeFile">train.py</span><span class="code-lang">PYTHON</span></div>
+            <pre id="codeBlock" aria-live="polite"></pre>
+          </div>
+          <div class="train-copy reveal" style="--delay:.08s">
+            <div class="eyebrow light" id="trainKicker">STEP 01 / FORWARD</div>
+            <h3 id="trainTitle">先把输入变成预测</h3>
+            <p id="trainText">输入逐层乘权重、加偏置、过激活。最后用 sigmoid 把分数压到 0–1，得到“属于类别 B 的概率”。</p>
+            <div class="formula-card" id="trainFormula">z<sup>1</sup> = W<sup>1</sup>x + b<sup>1</sup></div>
+            <p class="train-foot" id="trainFoot">N = 384 个训练样本；一次全量前向，得到 384 个预测。</p>
+          </div>
+        </div>
+
+        <div class="train-terms reveal">
+          <span><b>epoch</b> 全量看一遍</span>
+          <span><b>batch</b> 一次更新用多少样本</span>
+          <span><b>iteration</b> 一次参数更新</span>
+          <span class="train-terms-note">本例：384 个样本全量，1,200 次更新</span>
+        </div>
+
+        <div class="train-quote reveal">
+          <span>“</span>
+          <p>反向传播并不神秘：<b>责任 × 连接强度 × 本地斜率</b>。链式法则只是把“谁的锅、占多少”一层层算清楚。</p>
+          <span>”</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIMENT -->
+    <section class="section section-cream experiment" id="experiment">
+      <div class="shell">
+        <div class="section-head split reveal">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>03 / 真实训练</div>
+            <h2>从随机边界，<br>到两条弯月。</h2>
+          </div>
+          <p class="section-lead">拖动下方的时间轴，回放同一组参数从第 0 步到第 1200 步的变化。背景颜色是模型给出的概率，深青线是 p = 0.5 的分界。</p>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel boundary-panel reveal">
+            <div class="panel-head">
+              <div><span class="tag">DECISION BOUNDARY</span><h3>模型怎么看这片平面</h3></div>
+              <span class="step-badge" id="stepBadge">第 1200 步</span>
+            </div>
+            <div class="boundary-wrap">
+              <canvas id="boundaryCanvas" width="840" height="700" aria-label="模型在双月牙数据上的决策边界"></canvas>
+              <div class="boundary-legend"><span><i class="dot coral"></i>类别 A</span><span><i class="dot teal"></i>类别 B</span><span><i class="ring"></i>测试点</span></div>
+            </div>
+            <div class="scrubber">
+              <input id="stepRange" type="range" min="0" max="4" step="1" value="4" aria-label="训练步数">
+              <div class="scrubber-ticks" id="stepTicks">
+                <button data-index="0">0</button><button data-index="1">20</button><button data-index="2">80</button><button data-index="3">300</button><button data-index="4">1200</button>
+              </div>
+            </div>
+            <div class="boundary-meta">
+              <div><span>训练准确率</span><strong id="metricTrain">99.5%</strong></div>
+              <div><span>测试准确率</span><strong id="metricTest">97.9%</strong></div>
+              <div><span>可学习参数</span><strong>105</strong></div>
+              <span class="step-caption" id="stepCaption">边界成型，进入微调</span>
+            </div>
+          </article>
+
+          <article class="panel loss-panel dark-panel reveal" style="--delay:.08s">
+            <div class="panel-head">
+              <div><span class="tag on-dark">LOSS CURVE</span><h3>损失有没有真的下降？</h3></div>
+              <span class="panel-hint on-dark">对数纵轴</span>
+            </div>
+            <div class="loss-chart-wrap"><canvas id="lossChart" width="640" height="330" aria-label="训练和测试损失曲线"></canvas></div>
+            <div class="loss-legend"><span><i class="line teal"></i>训练损失</span><span><i class="line coral dashed"></i>测试损失</span><span class="loss-final">最终 0.009 / 0.046</span></div>
+            <p class="loss-note">前 100 步降得最快；测试损失略高，但没有发散。训练集 99.5%，测试集 97.9%——差距很小。</p>
+            <div class="loss-stats"><div><b>384</b><span>训练样本</span></div><div><b>96</b><span>测试样本</span></div><div><b>0.14</b><span>噪声</span></div></div>
+          </article>
+        </div>
+
+        <div class="insight-grid">
+          <div class="insight reveal"><span>01</span><h3>先降损失，再调边界</h3><p>误差在前 100 步快速下降，之后曲线变平。边界不是一次性画出来的，是被损失一点点推出来的。</p></div>
+          <div class="insight reveal" style="--delay:.06s"><span>02</span><h3>97.9% 不是 100%</h3><p>96 个测试样本错 2 个。数据有噪声点，100% 反而要警惕：模型可能把训练集背下来了。</p></div>
+          <div class="insight reveal" style="--delay:.12s"><span>03</span><h3>边界是参数的影子</h3><p>没有一行代码写“这里要弯”。弯月形状是 105 个权重和偏置共同作用的结果，换一组参数，边界就会变。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HEATMAP -->
+    <section class="section section-paper heatmap" id="heatmap">
+      <div class="shell">
+        <div class="section-head split reveal">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>04 / 看懂参数</div>
+            <h2>把 105 个参数<br>摊开来看。</h2>
+          </div>
+          <p class="section-lead">每一行是一个神经元收到的权重，最后一列是它自己的偏置。悬停任意格子，看看它的坐标和数值——W2 的 64 个权重默认不标数字，避免变成一堵数字墙。</p>
+        </div>
+
+        <div class="heat-shell">
+          <article class="panel heat-panel reveal">
+            <div class="heat-toolbar">
+              <div class="heat-tabs" role="tablist" aria-label="选择参数矩阵">
+                <button class="heat-tab is-active" data-heat="W1" role="tab" aria-selected="true">W1 <span>8×2 + b</span></button>
+                <button class="heat-tab" data-heat="W2" role="tab" aria-selected="false">W2 <span>8×8 + b</span></button>
+                <button class="heat-tab" data-heat="W3" role="tab" aria-selected="false">W3 <span>1×8 + b</span></button>
+              </div>
+              <label class="switch"><input id="showValues" type="checkbox" checked><span></span>显示数值</label>
+            </div>
+            <div class="heat-meta"><span id="heatShape">8 行 × (2 权重 + 1 偏置)</span><span class="heat-hint" id="heatHint">颜色越深，绝对值越大</span></div>
+            <div class="matrix-scroll">
+              <div id="matrix" class="matrix" role="grid" aria-label="参数热力图"></div>
+            </div>
+            <div class="heat-legend">
+              <div class="legend-scale"><span>−3.9</span><i></i><span>0</span><i></i><span>+3.9</span></div>
+              <div class="legend-copy"><span><i class="dot teal"></i>正权重</span><span><i class="dot coral"></i>负权重</span><span>色阶经过压缩，方便看清小值</span></div>
+            </div>
+          </article>
+
+          <aside class="panel inspect-panel dark-panel reveal" style="--delay:.08s">
+            <span class="tag on-dark">CELL INSPECTOR</span>
+            <div class="inspect-main">
+              <span id="inspectKicker">悬停任意格子</span>
+              <strong id="inspectValue">—</strong>
+              <p id="inspectText">你会看到它在矩阵里的坐标、精确数值，以及它所在那一行的模式。</p>
+            </div>
+            <div class="inspect-row">
+              <div class="inspect-row-head"><span id="rowTitle">ROW PROFILE</span><span id="rowNote">这一行在学什么？</span></div>
+              <div id="rowBars" class="row-bars">
+                <div class="empty-bars"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <div class="inspect-insight">
+              <span class="mini-label">READING</span>
+              <p id="rowInsight">这一行最敏感的是 x1；正负号说明它在做“组合筛选”，不是简单地给某个输入打分。</p>
+            </div>
+            <div class="inspect-callout"><b>权重 ≠ 重要性。</b>输入尺度、相关特征、后续层的抵消，都会改变一个权重的实际作用。颜色图用来发现模式，不用来下因果结论。</div>
+            <p class="inspect-hint">试试悬停 W2 的 g2 和 g3 两行：它们的相关系数约 0.94。</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEARNING RATE -->
+    <section class="section section-dark lr" id="learning-rate">
+      <div class="shell">
+        <div class="section-head split reveal">
+          <div>
+            <div class="eyebrow light"><span class="eyebrow-line"></span>05 / 学习率</div>
+            <h2>步子太大飞出去，<br>太小走不动。</h2>
+          </div>
+          <p class="section-lead">学习率 η 是超参数，不是学出来的。下面是一条二次函数山谷：拖动步长，看参数 θ 怎么走。真实的损失面有 105 维，这里只切了一刀。</p>
+        </div>
+
+        <div class="lr-grid">
+          <div class="lr-copy reveal">
+            <div class="lr-rule"><span>01</span><div><b>太小</b><p>每次都挪一点，方向没错，但要走很多步才到底。</p></div></div>
+            <div class="lr-rule"><span>02</span><div><b>刚好</b><p>几步滑到谷底，稳定、可重复，损失单调下降。</p></div></div>
+            <div class="lr-rule"><span>03</span><div><b>太大</b><p>一步跨过谷底，在两边来回弹；再大就飞出去。</p></div></div>
+            <div class="lr-formula">
+              <span>UPDATE RULE</span>
+              <code>θ ← θ − η · 2θ</code>
+              <small>f(θ) = θ²，梯度 = 2θ；这是示意图，不是 105 维真实损失面</small>
+            </div>
+            <div class="lr-order">
+              <span class="mini-label">TUNING ORDER</span>
+              <div class="order-item"><b>01</b><p><strong>先标准化输入。</strong>特征尺度差太多，同一个 η 不可能适合所有参数。</p></div>
+              <div class="order-item"><b>02</b><p><strong>再找合适量级。</strong>0.001 → 0.01 → 0.1，按 3× 或 10× 跳，不要线性微调。</p></div>
+              <div class="order-item"><b>03</b><p><strong>最后看两条曲线。</strong>训练和测试一起看，别只盯训练损失。</p></div>
+              <div class="order-item"><b>04</b><p><strong>先跑通小网络。</strong>1–2 个隐藏层、几十个参数，先看见边界怎么变，再加深。</p></div>
+              <div class="order-item"><b>05</b><p><strong>权重图看模式。</strong>行与行、层与层的关系，比单个格子可靠。</p></div>
+            </div>
+          </div>
+
+          <div class="lr-lab panel dark-panel reveal" style="--delay:.08s">
+            <div class="panel-head">
+              <div><span class="tag on-dark">STEP SIZE LAB</span><h3>滑到谷底，还是飞出去？</h3></div>
+              <span class="lr-badge" id="lrBadge">刚好</span>
+            </div>
+            <svg id="valleySvg" viewBox="0 0 640 380" role="img" aria-label="二次损失山谷中的梯度下降轨迹"></svg>
+            <div class="lr-presets">
+              <button class="lr-preset" data-eta="0.03">太小 <span>0.03</span></button>
+              <button class="lr-preset is-active" data-eta="0.45">刚好 <span>0.45</span></button>
+              <button class="lr-preset" data-eta="1.05">太大 <span>1.05</span></button>
+            </div>
+            <div class="lr-controls">
+              <label class="slider-row"><span>η</span><input id="etaRange" type="range" min="0.01" max="1.2" step="0.01" value="0.45"><output id="etaOut">0.45</output></label>
+              <div class="lr-buttons"><button class="btn btn-small btn-primary" id="lrRun">播放</button><button class="btn btn-small btn-ghost" id="lrReset">重置</button></div>
+            </div>
+            <div class="lr-readout">
+              <div><span>θ</span><strong id="lrTheta">−2.20</strong></div>
+              <div><span>损失</span><strong id="lrLoss">4.84</strong></div>
+              <div><span>步数</span><strong id="lrSteps">0</strong></div>
+              <div><span>状态</span><strong id="lrStatus">准备</strong></div>
+            </div>
+            <p class="lr-note" id="lrNote">按“播放”，看 8 步内的轨迹。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHEATSHEET -->
+    <section class="section section-cream cheatsheet" id="cheatsheet">
+      <div class="shell">
+        <div class="section-head split reveal">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>06 / 速查</div>
+            <h2>一页带走，<br>顺便避开这些坑。</h2>
+          </div>
+          <p class="section-lead">如果只记三句话：参数是 W 和 b；训练是四步循环；看图要同时看损失、边界和权重模式。</p>
+        </div>
+
+        <div class="cheat-grid">
+          <article class="cheat-card reveal">
+            <div class="cheat-head"><span>01</span><h3>参数 vs 超参数</h3></div>
+            <table class="mini-table">
+              <thead><tr><th></th><th>谁决定</th><th>训练中变吗</th></tr></thead>
+              <tbody>
+                <tr><td><b>参数 W / b</b></td><td>梯度下降</td><td class="yes">变</td></tr>
+                <tr><td><b>超参数</b></td><td>人 / 搜索</td><td class="no">不变</td></tr>
+              </tbody>
+            </table>
+            <p class="cheat-foot">学习率、层数、隐藏单元、激活函数、batch size 都是超参数。</p>
+          </article>
+
+          <article class="cheat-card reveal" style="--delay:.06s">
+            <div class="cheat-head"><span>02</span><h3>5 个常见坑</h3></div>
+            <ul class="pitfall-list">
+              <li><i>×</i><span><b>全 0 初始化。</b>隐藏神经元永远对称，等于白加一层。</span></li>
+              <li><i>×</i><span><b>学习率太大。</b>损失震荡、爆炸，甚至 NaN。</span></li>
+              <li><i>×</i><span><b>只看训练损失。</b>测试集才是“没见过的题”。</span></li>
+              <li><i>×</i><span><b>把权重当因果。</b>相关特征会分摊权重，尺度也会改变数值。</span></li>
+              <li><i>×</i><span><b>用测试集调参。</b>反复看测试集，它就不再是“没见过”的题。</span></li>
+            </ul>
+          </article>
+
+          <article class="cheat-card reveal" style="--delay:.12s">
+            <div class="cheat-head"><span>03</span><h3>一页总结</h3></div>
+            <div class="summary-lines">
+              <div><b>参数</b><span>每层一个矩阵 W + 一个向量 b；本例共 105 个。</span></div>
+              <div><b>训练</b><span>前向 → 损失 → 反向 → 更新，循环到收敛。</span></div>
+              <div><b>看图</b><span>损失看趋势，边界看形状，权重看模式。</span></div>
+              <div><b>边界</b><span>权重颜色 ≠ 特征重要性；用消融或置换再验证。</span></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="cta-band reveal">
+          <div class="cta-copy">
+            <span class="eyebrow light">TAKE IT WITH YOU</span>
+            <h2>把 6 页图解<br>和代码带回去。</h2>
+            <p>适合打印的 A4 版 PDF，以及不依赖框架的 NumPy 实现。所有训练数据、权重和曲线都能复现。</p>
+          </div>
+          <div class="cta-actions">
+            <a class="btn btn-primary" href="downloads/mlp-guide.pdf" download>下载 PDF <span>↓</span></a>
+            <a class="btn btn-ghost" href="downloads/mlp_demo.py" download>下载 mlp_demo.py</a>
+            <span class="cta-meta">NumPy · 无框架 · 1200 步</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div class="footer-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 36 36"><circle cx="8" cy="10" r="3"/><circle cx="8" cy="26" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="28" cy="18" r="3"/><path d="M10.5 11.5 15.5 16M10.5 24.5 15.5 20M21 18h4"/></svg>
+        </span>
+        <div><b>MLP / 105</b><span>学习参数实验室</span></div>
+      </div>
+      <div class="footer-copy">
+        <p>网络、决策边界和参数热力图使用本次训练的真实结果；学习率山谷为示意。</p>
+        <p>数据：two-moons · 480 样本 · noise 0.14 · Adam 0.01 · 全量 batch</p>
+      </div>
+      <div class="footer-links">
+        <a href="../">← 个人主页</a>
+        <a href="downloads/mlp-guide.pdf">PDF 图解</a>
+        <a href="downloads/mlp_demo.py">源码</a>
+        <a href="#top">回到顶部 ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
